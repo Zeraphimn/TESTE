@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Nebula Oblitus — Painel do Mestre</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0B0E17;
+    --surface:#141A2B;
+    --surface-raised:#1B2338;
+    --line:#2A3350;
+    --text:#E8EBF5;
+    --text-dim:#7C87A8;
+    --pv:#E8544B;
+    --etr:#F0A64B;
+    --pe:#4BC8E8;
+    --rm:#9B6BE8;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--void);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100%;
+  }
+  body{
+    padding: max(20px, env(safe-area-inset-top)) 18px 60px;
+    max-width:720px;
+    margin:0 auto;
+  }
+  header{ margin-bottom:20px; }
+  .rotulo{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:0.04em;
+  }
+  h1{ font-size:24px; font-weight:700; margin:4px 0 10px; }
+  .status-conexao{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+  }
+  .status-conexao.ok{ color:var(--pe); }
+  .status-conexao.erro{ color:var(--pv); }
+
+  h2{
+    font-size:14px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin:28px 0 12px;
+  }
+
+  .personagem{
+    background:var(--surface);
+    border:1px solid var(--line);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .personagem-topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .personagem-nome{ font-size:16px; font-weight:700; }
+  .personagem-id{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+  }
+
+  .grade-stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .campo{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .campo label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--text-dim);
+  }
+  .campo.pv label{ color:var(--pv); }
+  .campo.etr label{ color:var(--etr); }
+  .campo.pe label{ color:var(--pe); }
+  .campo.rm label{ color:var(--rm); }
+
+  .par-inputs{ display:flex; align-items:center; gap:6px; }
+  .par-inputs input{
+    width:100%;
+    height:40px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:4px;
+  }
+  .par-inputs span{ color:var(--text-dim); font-size:13px; }
+
+  .linha-acoes{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border-radius:4px;
+    border:1px solid var(--line);
+    padding:10px 14px;
+    cursor:pointer;
+  }
+  button.salvar{ background:var(--pe); color:var(--void); border-color:var(--pe); }
+  button.remover{ background:transparent; color:var(--pv); border-color:var(--pv); }
+  button.copiar{ background:var(--surface-raised); color:var(--text); }
+  button.criar{ background:var(--rm); color:var(--void); border-color:var(--rm); width:100%; margin-top:6px; }
+
+  .link-jogador{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    word-break:break-all;
+  }
+
+  .form-novo{
+    background:var(--surface);
+    border:1px solid var(--line);
+    padding:16px;
+  }
+  .form-novo .campo{ margin-bottom:10px; }
+  .form-novo input{
+    width:100%;
+    height:42px;
+    padding:0 10px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:14px;
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:4px;
+  }
+
+  .aviso{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--pv);
+    padding:14px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="rotulo">Nebula Oblitus — painel do Mestre</div>
+  <h1>Personagens</h1>
+  <div class="status-conexao" id="statusConexao">conectando…</div>
+</header>
+
+<div id="lista"></div>
+
+<h2>Adicionar personagem</h2>
+<div class="form-novo">
+  <div class="campo"><label>Nome</label><input id="novoNome" placeholder="Ex.: Darian"></div>
+  <div class="grade-stats">
+    <div class="campo pv"><label>PV Máximo</label><input id="novoPvMax" type="number" value="20"></div>
+    <div class="campo etr"><label>ETR Máximo</label><input id="novoEtrMax" type="number" value="100"></div>
+    <div class="campo pe"><label>PE Máximo</label><input id="novoPeMax" type="number" value="10"></div>
+    <div class="campo rm"><label>RM Máximo</label><input id="novoRmMax" type="number" value="5"></div>
+  </div>
+  <button class="criar" id="btnCriar">Criar personagem</button>
+</div>
+
+<script>
+/*
+  Uso:
+  painel-mestre.html?api=URL_DO_APPS_SCRIPT&token=TOKEN_DO_MESTRE&overlay=URL_DO_OVERLAY&painel=URL_DO_PAINEL_JOGADOR
+
+  api      — URL /exec do Google Apps Script (obrigatório)
+  token    — token mestre, o mesmo salvo na propriedade MASTER_TOKEN (obrigatório)
+  overlay  — URL pública do overlay.html, só para montar o link de teste (opcional)
+  painel   — URL pública do painel-jogador.html, para montar o link de cada jogador (opcional)
+*/
+
+var params = new URLSearchParams(window.location.search);
+var API_URL = params.get('api');
+var MASTER_TOKEN = params.get('token');
+var PAINEL_URL = params.get('painel');
+
+var STATS = [
+  { key: 'pv', max: 'pvMax', label: 'PV', maxLabel: 'PV Máximo' },
+  { key: 'etr', max: 'etrMax', label: 'ETR', maxLabel: 'ETR Máximo' },
+  { key: 'pe', max: 'peMax', label: 'PE', maxLabel: 'PE Máximo' },
+  { key: 'rm', max: 'rmMax', label: 'RM', maxLabel: 'RM Máximo' }
+];
+
+var lista = document.getElementById('lista');
+var statusConexao = document.getElementById('statusConexao');
+
+function checarConfig() {
+  if (!API_URL || !MASTER_TOKEN) {
+    statusConexao.textContent = 'Adicione ?api=URL&token=TOKEN_DO_MESTRE na URL deste painel.';
+    statusConexao.className = 'status-conexao erro';
+    return false;
+  }
+  return true;
+}
+
+function linkJogador(p) {
+  if (!PAINEL_URL) return null;
+  return PAINEL_URL + '?api=' + encodeURIComponent(API_URL) + '&id=' + p.id + '&token=' + p.token;
+}
+
+function renderPersonagens(personagens) {
+  lista.innerHTML = '';
+  if (personagens.length === 0) {
+    lista.innerHTML = '<div class="aviso">Nenhum personagem cadastrado ainda.</div>';
+    return;
+  }
+
+  personagens.forEach(function (p) {
+    var card = document.createElement('div');
+    card.className = 'personagem';
+
+    var camposHtml = STATS.map(function (s) {
+      return (
+        '<div class="campo ' + s.key + '">' +
+          '<label>' + s.label + '</label>' +
+          '<div class="par-inputs">' +
+            '<input type="number" id="atual-' + p.id + '-' + s.key + '" value="' + p[s.key] + '">' +
+            '<span>/</span>' +
+            '<input type="number" id="max-' + p.id + '-' + s.key + '" value="' + p[s.max] + '">' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    var link = linkJogador(p);
+
+    card.innerHTML =
+      '<div class="personagem-topo">' +
+        '<div><div class="personagem-nome">' + p.nome + '</div><div class="personagem-id">ID ' + p.id + '</div></div>' +
+      '</div>' +
+      '<div class="grade-stats">' + camposHtml + '</div>' +
+      '<div class="linha-acoes">' +
+        '<button class="salvar" data-id="' + p.id + '">Salvar alterações</button>' +
+        '<button class="remover" data-id="' + p.id + '">Remover</button>' +
+        (link ? '<button class="copiar" data-link="' + link + '">Copiar link do jogador</button>' : '') +
+      '</div>' +
+      (link ? '<div class="link-jogador">' + link + '</div>' : '<div class="link-jogador">Adicione &painel=URL_DO_PAINEL_JOGADOR na URL deste painel para gerar o link pronto.</div>');
+
+    lista.appendChild(card);
+  });
+
+  lista.querySelectorAll('button.salvar').forEach(function (btn) {
+    btn.addEventListener('click', function () { salvarPersonagem(btn.getAttribute('data-id')); });
+  });
+  lista.querySelectorAll('button.remover').forEach(function (btn) {
+    btn.addEventListener('click', function () { removerPersonagem(btn.getAttribute('data-id')); });
+  });
+  lista.querySelectorAll('button.copiar').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(btn.getAttribute('data-link'));
+      btn.textContent = 'Copiado!';
+      setTimeout(function () { btn.textContent = 'Copiar link do jogador'; }, 1500);
+    });
+  });
+}
+
+function chamar(url) {
+  return fetch(url).then(function (r) { return r.json(); });
+}
+
+function salvarPersonagem(id) {
+  var chamadas = [];
+  STATS.forEach(function (s) {
+    var atual = Number(document.getElementById('atual-' + id + '-' + s.key).value);
+    var max = Number(document.getElementById('max-' + id + '-' + s.key).value);
+    chamadas.push(atualizarCampo(id, s.key, atual));
+    chamadas.push(atualizarCampo(id, s.key + '_max', max));
+  });
+  statusConexao.textContent = 'salvando…';
+  statusConexao.className = 'status-conexao';
+  Promise.all(chamadas).then(function () {
+    statusConexao.textContent = 'salvo com sucesso';
+    statusConexao.className = 'status-conexao ok';
+    carregar();
+  }).catch(function () {
+    statusConexao.textContent = 'erro ao salvar';
+    statusConexao.className = 'status-conexao erro';
+  });
+}
+
+function atualizarCampo(id, campo, valor) {
+  var url = API_URL + '?action=update&id=' + id + '&token=' + encodeURIComponent(MASTER_TOKEN) +
+    '&campo=' + campo + '&valor=' + valor;
+  return chamar(url);
+}
+
+function removerPersonagem(id) {
+  if (!confirm('Remover este personagem definitivamente?')) return;
+  var url = API_URL + '?action=remover&id=' + id + '&token=' + encodeURIComponent(MASTER_TOKEN);
+  chamar(url).then(function () { carregar(); });
+}
+
+document.getElementById('btnCriar').addEventListener('click', function () {
+  var nome = document.getElementById('novoNome').value.trim();
+  if (!nome) { alert('Digite um nome para o personagem.'); return; }
+
+  var url = API_URL + '?action=criar&token=' + encodeURIComponent(MASTER_TOKEN) +
+    '&nome=' + encodeURIComponent(nome) +
+    '&pv_max=' + Number(document.getElementById('novoPvMax').value) +
+    '&etr_max=' + Number(document.getElementById('novoEtrMax').value) +
+    '&pe_max=' + Number(document.getElementById('novoPeMax').value) +
+    '&rm_max=' + Number(document.getElementById('novoRmMax').value);
+
+  chamar(url).then(function (data) {
+    if (data.erro) { alert(data.erro); return; }
+    document.getElementById('novoNome').value = '';
+    carregar();
+  });
+});
+
+function carregar() {
+  var url = API_URL + '?action=admin&token=' + encodeURIComponent(MASTER_TOKEN);
+  statusConexao.textContent = 'carregando…';
+  statusConexao.className = 'status-conexao';
+  chamar(url).then(function (data) {
+    if (data.erro) {
+      statusConexao.textContent = data.erro;
+      statusConexao.className = 'status-conexao erro';
+      return;
+    }
+    renderPersonagens(data);
+    statusConexao.textContent = data.length + ' personagem(ns) carregado(s)';
+    statusConexao.className = 'status-conexao ok';
+  }).catch(function () {
+    statusConexao.textContent = 'não foi possível conectar à API';
+    statusConexao.className = 'status-conexao erro';
+  });
+}
+
+if (checarConfig()) {
+  carregar();
+}
+</script>
+</body>
+</html>
