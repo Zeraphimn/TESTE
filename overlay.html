@@ -124,20 +124,10 @@
   }
   .fill.pv{
     background:linear-gradient(90deg, color-mix(in srgb, var(--pv) 55%, black), var(--pv));
-    animation: batimento 1.1s ease-in-out infinite;
   }
   .fill.etr{ background:linear-gradient(90deg, color-mix(in srgb, var(--etr) 55%, black), var(--etr)); }
   .fill.pe{ background:linear-gradient(90deg, color-mix(in srgb, var(--pe) 55%, black), var(--pe)); }
   .fill.rm{ background:linear-gradient(90deg, color-mix(in srgb, var(--rm) 55%, black), var(--rm)); }
-
-  @keyframes batimento{
-    0%{ filter:brightness(1); }
-    8%{ filter:brightness(1.4); }
-    16%{ filter:brightness(1); }
-    26%{ filter:brightness(1.22); }
-    36%{ filter:brightness(1); }
-    100%{ filter:brightness(1); }
-  }
 
   .fill::after{
     content:"";
@@ -243,7 +233,10 @@
   .track.etr-n7{ animation: etr-borda-falha 0.18s steps(2) infinite; }
   .track.etr-n7::before{ opacity:0.58; animation: etr-flicker-forte 0.32s steps(12) infinite; }
   .track.etr-n7::after{ opacity:0.58; animation: etr-varredura 0.45s linear infinite; }
-  .track.etr-n7 .fill{ animation: etr-respiracao 0.45s ease-in-out infinite, etr-cromatico 0.5s linear infinite; }
+  .track.etr-n7 .fill{
+    background: linear-gradient(90deg, #7A3200, #F0A64B 55%, #FFCF6B);
+    animation: etr-respiracao 0.45s ease-in-out infinite, etr-cromatico 0.5s linear infinite;
+  }
 
   /* Número do ETR também "sofre" a partir do nível 4, sem nunca sair do lugar */
   .valores .atual.etr-glitch{
