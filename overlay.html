@@ -118,6 +118,21 @@
     width:3px;
     background:rgba(255,255,255,0.75);
   }
+  .fill::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1.6px);
+    background-size: 12px 12px;
+    background-position: 0 0;
+    opacity:0.45;
+    mix-blend-mode:overlay;
+    animation: flutuar-bolhas 2.4s linear infinite;
+  }
+  @keyframes flutuar-bolhas{
+    from{ background-position: 0 0; }
+    to{ background-position: 0 -48px; }
+  }
 
   .track.flash{ animation:flash 0.5s ease-out; }
   @keyframes flash{
