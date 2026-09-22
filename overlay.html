@@ -125,6 +125,12 @@
     100%{ box-shadow: inset 0 0 0 30px rgba(255,255,255,0); }
   }
 
+  .track.cura{ animation: flash-cura 0.7s ease-out; }
+  @keyframes flash-cura{
+    0%{ box-shadow: inset 0 0 0 30px rgba(75,232,140,0.6); }
+    100%{ box-shadow: inset 0 0 0 30px rgba(75,232,140,0); }
+  }
+
   .track.critico{
     animation: pulso-barra 1.2s ease-in-out infinite;
   }
@@ -177,6 +183,7 @@
   .delta.mostrar{ animation: subir 1.1s ease-out forwards; }
   .delta.neg{ color:#FFFFFF; }
   .delta.pos{ color:#FFFFFF; }
+  .delta.cura{ color:#4BE88C; }
   @keyframes subir{
     0%{ opacity:0; transform:translateY(-50%) translateX(-4px); }
     15%{ opacity:1; transform:translateY(-50%) translateX(0); }
@@ -292,12 +299,14 @@ function atualizarCard(p) {
 
     if (anterior && anterior[s.key] !== atual) {
       var diff = atual - anterior[s.key];
-      track.classList.remove('flash');
+      var ehCura = (s.key === 'pv' && diff > 0);
+
+      track.classList.remove('flash', 'cura');
       void track.offsetWidth;
-      track.classList.add('flash');
+      track.classList.add(ehCura ? 'cura' : 'flash');
 
       deltaEl.textContent = (diff > 0 ? '+' : '') + diff;
-      deltaEl.className = 'delta mostrar ' + (diff < 0 ? 'neg' : 'pos');
+      deltaEl.className = 'delta mostrar ' + (ehCura ? 'cura' : (diff < 0 ? 'neg' : 'pos'));
       setTimeout(function () {
         deltaEl.classList.remove('mostrar');
       }, 1100);
