@@ -36,7 +36,28 @@
     padding:20px;
   }
 
-  .card{ width:340px; }
+  .card{
+    width:340px;
+    filter:none;
+    transition: filter 0.6s ease;
+  }
+  .card.nocaute{
+    filter: grayscale(0.9) brightness(0.6) contrast(0.9);
+  }
+
+  .badge-nocaute{
+    display:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    color:var(--pv);
+    border:1px solid var(--pv);
+    padding:1px 6px;
+    animation: pulso-badge 1.4s ease-in-out infinite;
+  }
+  .badge-nocaute.ativo{ display:inline-block; }
+  @keyframes pulso-badge{ 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
 
   .card-topo{
     display:flex;
@@ -250,6 +271,39 @@
     62%{ opacity:1; text-shadow:none; }
   }
 
+  /* ===== PE baixo — "sem fôlego": tremor leve + flicker na barra ===== */
+  @keyframes tremor-leve{
+    0%, 100%{ transform:translateX(0); }
+    20%{ transform:translateX(-1px); }
+    40%{ transform:translateX(1px); }
+    60%{ transform:translateX(-1px); }
+    80%{ transform:translateX(1px); }
+  }
+  .stat.pe-fraco{ animation: tremor-leve 0.45s ease-in-out infinite; }
+  .stat.pe-fraco .fill{ animation: pe-flicker 1.3s ease-in-out infinite; }
+  @keyframes pe-flicker{
+    0%, 100%{ opacity:1; }
+    45%{ opacity:0.8; }
+    55%{ opacity:0.92; }
+    70%{ opacity:0.68; }
+  }
+
+  /* ===== RM cheio — "transbordando de magia": brilho pulsante além da borda ===== */
+  .track.rm-cheio{
+    animation: pulso-rm 1.4s ease-in-out infinite;
+  }
+  @keyframes pulso-rm{
+    0%, 100%{ box-shadow: 0 0 0 rgba(155,107,232,0); border-color:var(--line); }
+    50%{ box-shadow: 0 0 14px 2px rgba(155,107,232,0.75); border-color:var(--rm); }
+  }
+  .track.rm-cheio .fill{
+    animation: rm-brilho 1.4s ease-in-out infinite;
+  }
+  @keyframes rm-brilho{
+    0%, 100%{ filter:brightness(1); }
+    50%{ filter:brightness(1.4); }
+  }
+
   .valores{
     flex-shrink:0;
     display:flex;
@@ -379,12 +433,16 @@ function montarUrl() {
 
 function renderCard(p) {
   var card = document.createElement('div');
-  card.className = 'card';
+  card.className = 'card' + (p.pv <= 0 ? ' nocaute' : '');
   card.id = 'card-' + p.id;
 
   var topo = document.createElement('div');
   topo.className = 'card-topo';
-  topo.innerHTML = '<div class="marca"></div><div class="nome ' + classeNome(p) + '" id="nome-' + p.id + '">' + p.nome + '</div><div class="linha"></div>';
+  topo.innerHTML =
+    '<div class="marca"></div>' +
+    '<div class="nome ' + classeNome(p) + '" id="nome-' + p.id + '">' + p.nome + '</div>' +
+    '<div class="badge-nocaute' + (p.pv <= 0 ? ' ativo' : '') + '" id="nocaute-' + p.id + '">NOCAUTEADO</div>' +
+    '<div class="linha"></div>';
   card.appendChild(topo);
 
   STATS.forEach(function (s) {
@@ -394,12 +452,15 @@ function renderCard(p) {
     var classeCritico = ehCritico(s.key, pct) ? ' critico' : '';
     var classeEtr = s.key === 'etr' ? (' etr-n' + nivelEtr(pct)) : '';
     var classeGlitchNum = (s.key === 'etr' && nivelEtr(pct) >= 4) ? ' etr-glitch' : '';
+    var classePeFraco = (s.key === 'pe' && pct <= 20) ? ' pe-fraco' : '';
+    var classeRmCheio = (s.key === 'rm' && pct >= 100) ? ' rm-cheio' : '';
 
     var row = document.createElement('div');
-    row.className = 'stat';
+    row.className = 'stat' + classePeFraco;
+    row.id = 'stat-' + p.id + '-' + s.key;
     row.innerHTML =
       '<div class="icone ' + s.key + '">' + s.label + '</div>' +
-      '<div class="track' + classeCritico + classeEtr + '" id="track-' + p.id + '-' + s.key + '">' +
+      '<div class="track' + classeCritico + classeEtr + classeRmCheio + '" id="track-' + p.id + '-' + s.key + '">' +
         '<div class="fill ' + s.key + '" id="fill-' + p.id + '-' + s.key + '" style="width:' + pct + '%"></div>' +
         '<div class="delta" id="delta-' + p.id + '-' + s.key + '"></div>' +
       '</div>' +
@@ -416,7 +477,11 @@ function renderCard(p) {
 function atualizarCard(p) {
   var anterior = estadoAnterior[p.id];
 
+  var cardEl = document.getElementById('card-' + p.id);
   var nomeEl = document.getElementById('nome-' + p.id);
+  var badgeEl = document.getElementById('nocaute-' + p.id);
+  if (cardEl) cardEl.classList.toggle('nocaute', p.pv <= 0);
+  if (badgeEl) badgeEl.classList.toggle('ativo', p.pv <= 0);
   if (nomeEl) {
     nomeEl.className = 'nome ' + classeNome(p);
   }
@@ -426,6 +491,7 @@ function atualizarCard(p) {
     var max = p[s.max] || 1;
     var pct = Math.max(0, Math.min(100, (atual / max) * 100));
 
+    var linha = document.getElementById('stat-' + p.id + '-' + s.key);
     var fill = document.getElementById('fill-' + p.id + '-' + s.key);
     var val = document.getElementById('val-' + p.id + '-' + s.key);
     var track = document.getElementById('track-' + p.id + '-' + s.key);
@@ -441,6 +507,14 @@ function atualizarCard(p) {
       track.className = track.className.replace(/\betr-n\d\b/g, '').trim();
       track.classList.add('etr-n' + nivelEtr(pct));
       val.classList.toggle('etr-glitch', nivelEtr(pct) >= 4);
+    }
+
+    if (s.key === 'pe' && linha) {
+      linha.classList.toggle('pe-fraco', pct <= 20);
+    }
+
+    if (s.key === 'rm') {
+      track.classList.toggle('rm-cheio', pct >= 100);
     }
 
     if (anterior && anterior[s.key] !== atual) {
