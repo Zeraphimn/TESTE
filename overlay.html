@@ -60,8 +60,7 @@
     transition: text-shadow 0.4s ease, -webkit-text-stroke 0.4s ease;
   }
   .nome.pv-cheio{
-    -webkit-text-stroke: 1px rgba(240,200,110,0.9);
-    text-shadow: 0 0 6px rgba(240,200,110,0.5);
+    -webkit-text-stroke: 1.1px rgba(240,200,110,0.95);
   }
   .nome.pv-baixo{
     -webkit-text-stroke: 1px rgba(196,203,214,0.85);
@@ -123,10 +122,22 @@
     width:0%;
     transition:width 0.6s cubic-bezier(.4,0,.2,1);
   }
-  .fill.pv{ background:linear-gradient(90deg, color-mix(in srgb, var(--pv) 55%, black), var(--pv)); }
+  .fill.pv{
+    background:linear-gradient(90deg, color-mix(in srgb, var(--pv) 55%, black), var(--pv));
+    animation: batimento 1.1s ease-in-out infinite;
+  }
   .fill.etr{ background:linear-gradient(90deg, color-mix(in srgb, var(--etr) 55%, black), var(--etr)); }
   .fill.pe{ background:linear-gradient(90deg, color-mix(in srgb, var(--pe) 55%, black), var(--pe)); }
   .fill.rm{ background:linear-gradient(90deg, color-mix(in srgb, var(--rm) 55%, black), var(--rm)); }
+
+  @keyframes batimento{
+    0%{ filter:brightness(1); }
+    8%{ filter:brightness(1.4); }
+    16%{ filter:brightness(1); }
+    26%{ filter:brightness(1.22); }
+    36%{ filter:brightness(1); }
+    100%{ filter:brightness(1); }
+  }
 
   .fill::after{
     content:"";
@@ -171,6 +182,79 @@
   @keyframes pulso-barra{
     0%, 100%{ box-shadow: 0 0 0 rgba(232,84,75,0); border-color:var(--line); }
     50%{ box-shadow: 0 0 10px 1px rgba(232,84,75,0.65); border-color:var(--pv); }
+  }
+
+  /* ===== Corrupção visual do ETR — 7 níveis, sempre dentro da área da barra ===== */
+  .track.etr::before{
+    content:"";
+    position:absolute; inset:0;
+    pointer-events:none;
+    background-image: repeating-linear-gradient(180deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 1px, transparent 1px, transparent 3px);
+    opacity:0;
+    mix-blend-mode:overlay;
+  }
+  .track.etr::after{
+    content:"";
+    position:absolute; inset:0;
+    pointer-events:none;
+    background:linear-gradient(100deg, transparent 0%, rgba(255,60,90,0.3) 18%, transparent 22%, transparent 55%, rgba(70,220,255,0.28) 60%, transparent 64%, transparent 100%);
+    background-size:220% 100%;
+    background-position:220% 0;
+    opacity:0;
+    mix-blend-mode:screen;
+  }
+
+  @keyframes etr-respiracao{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.12); } }
+  @keyframes etr-flicker-leve{ 0%,100%{ opacity:0.08; } 50%{ opacity:0.16; } }
+  @keyframes etr-flicker-media{ 0%{ opacity:0.14; } 20%{ opacity:0.32; } 35%{ opacity:0.12; } 55%{ opacity:0.3; } 70%{ opacity:0.1; } 100%{ opacity:0.14; } }
+  @keyframes etr-flicker-forte{ 0%{ opacity:0.25; } 12%{ opacity:0.55; } 24%{ opacity:0.15; } 40%{ opacity:0.5; } 52%{ opacity:0.1; } 68%{ opacity:0.5; } 80%{ opacity:0.2; } 100%{ opacity:0.25; } }
+  @keyframes etr-varredura{ from{ background-position:220% 0; } to{ background-position:-20% 0; } }
+  @keyframes etr-borda-falha{ 0%,100%{ border-color:var(--line); } 50%{ border-color:var(--etr); } }
+  @keyframes etr-cromatico{ 0%,100%{ filter:brightness(1.1) hue-rotate(0deg); } 50%{ filter:brightness(1.22) hue-rotate(10deg); } }
+
+  /* Nível 1 — 0 a 20%: respiração quase imperceptível */
+  .track.etr-n1 .fill{ animation: etr-respiracao 3.6s ease-in-out infinite; }
+
+  /* Nível 2 — 21 a 40%: respiração um pouco mais perceptível */
+  .track.etr-n2 .fill{ animation: etr-respiracao 2.6s ease-in-out infinite; }
+
+  /* Nível 3 — 41 a 60%: flickering discreto começa a aparecer */
+  .track.etr-n3::before{ opacity:0.12; animation: etr-flicker-leve 2s steps(6) infinite; }
+  .track.etr-n3 .fill{ animation: etr-respiracao 1.9s ease-in-out infinite; }
+
+  /* Nível 4 — 61 a 75%: glitches e interferências internas */
+  .track.etr-n4::before{ opacity:0.22; animation: etr-flicker-media 1.6s steps(8) infinite; }
+  .track.etr-n4::after{ opacity:0.2; animation: etr-varredura 2.4s linear infinite; }
+  .track.etr-n4 .fill{ animation: etr-respiracao 1.4s ease-in-out infinite; }
+
+  /* Nível 5 — 76 a 90%: glitches intensos + aberração cromática + falha na borda */
+  .track.etr-n5{ animation: etr-borda-falha 0.6s steps(2) infinite; }
+  .track.etr-n5::before{ opacity:0.32; animation: etr-flicker-media 1s steps(8) infinite; }
+  .track.etr-n5::after{ opacity:0.3; animation: etr-varredura 1.5s linear infinite; }
+  .track.etr-n5 .fill{ animation: etr-respiracao 1s ease-in-out infinite, etr-cromatico 1.8s linear infinite; }
+
+  /* Nível 6 — 91 a 99%: interferências frequentes, preenchimento instável */
+  .track.etr-n6{ animation: etr-borda-falha 0.35s steps(2) infinite; }
+  .track.etr-n6::before{ opacity:0.44; animation: etr-flicker-forte 0.6s steps(10) infinite; }
+  .track.etr-n6::after{ opacity:0.42; animation: etr-varredura 0.9s linear infinite; }
+  .track.etr-n6 .fill{ animation: etr-respiracao 0.7s ease-in-out infinite, etr-cromatico 1s linear infinite; }
+
+  /* Nível 7 — 100%: colapso visual, mas a barra nunca se desloca */
+  .track.etr-n7{ animation: etr-borda-falha 0.18s steps(2) infinite; }
+  .track.etr-n7::before{ opacity:0.58; animation: etr-flicker-forte 0.32s steps(12) infinite; }
+  .track.etr-n7::after{ opacity:0.58; animation: etr-varredura 0.45s linear infinite; }
+  .track.etr-n7 .fill{ animation: etr-respiracao 0.45s ease-in-out infinite, etr-cromatico 0.5s linear infinite; }
+
+  /* Número do ETR também "sofre" a partir do nível 4, sem nunca sair do lugar */
+  .valores .atual.etr-glitch{
+    animation: num-glitch 1.3s steps(10) infinite;
+  }
+  @keyframes num-glitch{
+    0%, 100%{ opacity:1; text-shadow:none; }
+    10%{ opacity:0.85; text-shadow: 1px 0 rgba(255,60,90,0.6), -1px 0 rgba(70,220,255,0.6); }
+    20%{ opacity:1; text-shadow:none; }
+    55%{ opacity:0.7; text-shadow: -1px 0 rgba(255,60,90,0.5), 1px 0 rgba(70,220,255,0.5); }
+    62%{ opacity:1; text-shadow:none; }
   }
 
   .valores{
@@ -272,14 +356,25 @@ function ehCritico(key, pct) {
 }
 
 // Decide a borda do nome do personagem com base na % de PV.
-// 100% = dourada · abaixo de 90% = prata · abaixo de 25% = vermelha pulsando.
+// 100% = dourada · abaixo de 100% = prata · abaixo de 25% = vermelha pulsando.
 function classeNome(p) {
   var max = p.pvMax || 1;
   var pct = Math.max(0, Math.min(100, (p.pv / max) * 100));
   if (pct < 25) return 'pv-critico';
   if (pct >= 100) return 'pv-cheio';
-  if (pct < 90) return 'pv-baixo';
-  return '';
+  return 'pv-baixo';
+}
+
+// Calcula o nível de corrupção visual do ETR (1 a 7) com base na % do máximo.
+// 0–20% n1 · 21–40% n2 · 41–60% n3 · 61–75% n4 · 76–90% n5 · 91–99% n6 · 100% n7
+function nivelEtr(pct) {
+  if (pct <= 20) return 1;
+  if (pct <= 40) return 2;
+  if (pct <= 60) return 3;
+  if (pct <= 75) return 4;
+  if (pct <= 90) return 5;
+  if (pct <= 99) return 6;
+  return 7;
 }
 
 function montarUrl() {
@@ -304,17 +399,19 @@ function renderCard(p) {
     var max = p[s.max] || 1;
     var pct = Math.max(0, Math.min(100, (atual / max) * 100));
     var classeCritico = ehCritico(s.key, pct) ? ' critico' : '';
+    var classeEtr = s.key === 'etr' ? (' etr-n' + nivelEtr(pct)) : '';
+    var classeGlitchNum = (s.key === 'etr' && nivelEtr(pct) >= 4) ? ' etr-glitch' : '';
 
     var row = document.createElement('div');
     row.className = 'stat';
     row.innerHTML =
       '<div class="icone ' + s.key + '">' + s.label + '</div>' +
-      '<div class="track' + classeCritico + '" id="track-' + p.id + '-' + s.key + '">' +
+      '<div class="track' + classeCritico + classeEtr + '" id="track-' + p.id + '-' + s.key + '">' +
         '<div class="fill ' + s.key + '" id="fill-' + p.id + '-' + s.key + '" style="width:' + pct + '%"></div>' +
         '<div class="delta" id="delta-' + p.id + '-' + s.key + '"></div>' +
       '</div>' +
       '<div class="valores">' +
-        '<span class="atual' + classeCritico + '" id="val-' + p.id + '-' + s.key + '">' + atual + '</span>' +
+        '<span class="atual' + classeCritico + classeGlitchNum + '" id="val-' + p.id + '-' + s.key + '">' + atual + '</span>' +
         '<span class="max">/' + max + '</span>' +
       '</div>';
     card.appendChild(row);
@@ -346,6 +443,12 @@ function atualizarCard(p) {
     val.textContent = atual;
     val.classList.toggle('critico', ehCritico(s.key, pct));
     track.classList.toggle('critico', ehCritico(s.key, pct));
+
+    if (s.key === 'etr') {
+      track.className = track.className.replace(/\betr-n\d\b/g, '').trim();
+      track.classList.add('etr-n' + nivelEtr(pct));
+      val.classList.toggle('etr-glitch', nivelEtr(pct) >= 4);
+    }
 
     if (anterior && anterior[s.key] !== atual) {
       var diff = atual - anterior[s.key];
